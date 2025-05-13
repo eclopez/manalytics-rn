@@ -11,7 +11,7 @@ function Index() {
         alignItems: 'center',
       }}
     >
-      <Player value={40} />
+      <Player />
     </View>
   );
 }

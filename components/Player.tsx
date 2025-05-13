@@ -1,11 +1,10 @@
+import { useFocusEffect } from '@react-navigation/native';
 import { Pressable, StyleSheet, Text } from 'react-native';
 import * as React from 'react';
+import { CURRENT_LIFE_KEY, STARTING_LIFE_KEY } from '@/lib/constants';
+import { Storage } from '@/lib/storage';
 
 const LONG_PRESS_DELAY = 600;
-
-interface PlayerProps {
-  value: number;
-}
 
 const clearIntervalRef = (intervalRef: React.RefObject<number | null>) => {
   if (intervalRef.current) {
@@ -14,33 +13,60 @@ const clearIntervalRef = (intervalRef: React.RefObject<number | null>) => {
   }
 };
 
-function Player(props: PlayerProps) {
-  const { value } = props;
+function Player() {
+  const [currentLife, setCurrentLife] = React.useState<number>(0);
+  const [isInitialLoad, setIsInitialLoad] = React.useState(true);
 
-  const [count, setCount] = React.useState<number>(value);
+  useFocusEffect(
+    React.useCallback(() => {
+      const loadStartingLife = async () => {
+        const startLifeValue = await Storage.getItem(STARTING_LIFE_KEY);
+        const currentLifeValue = await Storage.getItem(CURRENT_LIFE_KEY);
+
+        console.log(currentLifeValue ?? startLifeValue ?? 40);
+
+        setCurrentLife(Number(currentLifeValue ?? startLifeValue ?? 40));
+        setIsInitialLoad(false);
+      };
+
+      loadStartingLife();
+    }, []),
+  );
+
   const intervalRef = React.useRef<number | null>(null);
 
-  const handleIncrementCount = (delta: number = 1) => {
-    setCount((prev) => prev + delta);
+  React.useEffect(() => {
+    const setCurrentLifeValue = async () => {
+      await Storage.setItem(CURRENT_LIFE_KEY, currentLife);
+    };
+
+    if (!isInitialLoad) {
+      setCurrentLifeValue();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [currentLife]);
+
+  const handleIncrementCurrentLife = async (delta: number = 1) => {
+    setCurrentLife((prev) => prev + delta);
   };
 
-  const handleDecrementCount = (delta: number = 1) => {
-    setCount((prev) => prev - delta);
+  const handleDecrementCurrentLife = (delta: number = 1) => {
+    setCurrentLife((prev) => prev - delta);
   };
 
-  const handleLongPressIncrementCount = () => {
+  const handleLongPressIncrementCurrentLife = () => {
     clearIntervalRef(intervalRef);
 
     intervalRef.current = setInterval(() => {
-      handleIncrementCount(5);
+      handleIncrementCurrentLife(5);
     }, LONG_PRESS_DELAY);
   };
 
-  const handleLongPressDecrementCount = () => {
+  const handleLongPressDecrementCurrentLife = () => {
     clearIntervalRef(intervalRef);
 
     intervalRef.current = setInterval(() => {
-      handleDecrementCount(5);
+      handleDecrementCurrentLife(5);
     }, LONG_PRESS_DELAY);
   };
 
@@ -55,8 +81,8 @@ function Player(props: PlayerProps) {
     <>
       <Pressable
         delayLongPress={LONG_PRESS_DELAY}
-        onLongPress={handleLongPressIncrementCount}
-        onPress={() => handleIncrementCount()}
+        onLongPress={handleLongPressIncrementCurrentLife}
+        onPress={() => handleIncrementCurrentLife()}
         onPressOut={handlePressOut}
         style={({ pressed }) => [
           styles.button,
@@ -70,8 +96,8 @@ function Player(props: PlayerProps) {
       />
       <Pressable
         delayLongPress={LONG_PRESS_DELAY}
-        onLongPress={handleLongPressDecrementCount}
-        onPress={() => handleDecrementCount()}
+        onLongPress={handleLongPressDecrementCurrentLife}
+        onPress={() => handleDecrementCurrentLife()}
         onPressOut={handlePressOut}
         style={({ pressed }) => [
           styles.button,
@@ -88,7 +114,7 @@ function Player(props: PlayerProps) {
         numberOfLines={1}
         style={styles.counter}
       >
-        {count}
+        {currentLife}
       </Text>
     </>
   );
@@ -112,4 +138,3 @@ const styles = StyleSheet.create({
 });
 
 export { Player };
-export type { PlayerProps };
