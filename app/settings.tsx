@@ -1,8 +1,8 @@
-import * as React from 'react';
 import { View } from 'react-native';
-import { Player } from '@/components/Player';
+import * as React from 'react';
+import { Settings } from '@/components/Settings';
 
-function Index() {
+function SettingsModal() {
   return (
     <View
       style={{
@@ -11,9 +11,9 @@ function Index() {
         alignItems: 'center',
       }}
     >
-      <Player value={40} />
+      <Settings />
     </View>
   );
 }
 
-export default Index;
+export default SettingsModal;
